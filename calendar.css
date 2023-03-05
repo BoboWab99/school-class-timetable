@@ -30,8 +30,8 @@ body {
 }
 
 .calendar {
-   --cell-width: 100px;
-   --cell-height: 34px;
+   --cell-width: 25px;
+   --cell-height: 36px;
 
    padding-block: .25rem;
    overflow-x: auto;
@@ -46,18 +46,22 @@ body {
    grid-auto-columns: max-content;
 }
 
+.calendar-header .calendar-row {
+   min-height: revert;
+}
+
 .calendar-cell {
+   padding-block: 5px;
    width: var(--cell-width);
-   min-height: var(--cell-height);
-   padding: 2px 1px;
-   display: grid;
-   gap: 2px;
+   min-height: calc(var(--rowspan, 1) * var(--cell-height));
    border: solid #ddd;
    border-width: 1px 1px 0 0;
+   position: relative;
 }
 
 .calendar-header .calendar-cell {
    border-bottom-color: rgb(93, 131, 145);
+   font-size: 10px;
 }
 
 .calendar-cell:first-child {
@@ -68,7 +72,8 @@ body {
    border-bottom-width: 1px;
 }
 
-.calendar-body-cell {
+.calendar-body-cell .calendar-placeholders,
+.calendar-body-cell .calendar-bookings {
    grid-auto-flow: row;
    grid-auto-rows: var(--cell-height);
    grid-auto-columns: 100%;
@@ -112,18 +117,40 @@ body {
    border-bottom-right-radius: 3px;
 }
 
+.time-indicator {
+   display: inline-block;
+   padding-inline: 3px;
+   color: #fff;
+   background-color: rgb(30, 65, 110);
+   border-radius: 3px;
+   transform: translateX(-50%);
+}
+
+.calendar-booking-item {
+   position: absolute;
+   top: calc(var(--top, 0) * var(--cell-height));
+   left: 0;
+   width: calc(var(--colspan, 1) * var(--cell-width));
+   height: var(--cell-height);
+   pointer-events: all;
+   z-index: 1;
+}
+
 .lecture {
+   height: 100%;
    display: flex;
    flex-direction: column;
    justify-content: center;
    padding-inline: .25rem;
+   border: solid #fff;
+   border-width: 0 0 1px 1px;
 }
 
 .lecture > * {
    overflow: hidden;
    white-space: nowrap;
    text-overflow: ellipsis;
-   line-height: 1.2;
+   line-height: 1.15;
 }
 
 .lecture-title {
