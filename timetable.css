@@ -4,11 +4,14 @@
    box-sizing: border-box;
 }
 
-body {
-   margin: 0;
+html {
    font-family: 'Roboto', sans-serif;
    font-size: 13px;
    line-height: 1.5;
+}
+
+body {
+   margin: 0;
    text-align: center;
    color: rgb(22, 24, 26);
 }
@@ -20,16 +23,15 @@ body {
    padding-inline: .75rem;
 }
 
-.flex-center {
-   align-items: center;
-   justify-content: center;
-}
-
 [role="button"] {
    cursor: pointer;
 }
 
-.calendar {
+h1 {
+   color: rgb(86 111 143 / .9);
+}
+
+.timetable {
    --cell-width: 25px;
    --cell-height: 36px;
 
@@ -37,7 +39,7 @@ body {
    overflow-x: auto;
 }
 
-.calendar-row {
+.timetable-row {
    max-width: max-content;
    margin-inline: auto;
    display: grid;
@@ -46,11 +48,7 @@ body {
    grid-auto-columns: max-content;
 }
 
-.calendar-header .calendar-row {
-   min-height: revert;
-}
-
-.calendar-cell {
+.timetable-cell {
    padding-block: 5px;
    width: var(--cell-width);
    min-height: calc(var(--rowspan, 1) * var(--cell-height));
@@ -59,61 +57,64 @@ body {
    position: relative;
 }
 
-.calendar-header .calendar-cell {
+.timetable-header .timetable-cell {
+   min-height: 27px;
+   height: 27px;
    border-bottom-color: rgb(93, 131, 145);
    font-size: 10px;
 }
 
-.calendar-cell:first-child {
+.timetable-cell--col-indicator {
+   font-size: 1rem !important;
+   font-weight: 600;
+}
+
+.timetable-cell:first-child {
    border-left-width: 1px;
 }
 
-.calendar-row:last-child .calendar-cell {
+.timetable-row:last-child .timetable-cell {
    border-bottom-width: 1px;
 }
 
-.calendar-body-cell .calendar-placeholders,
-.calendar-body-cell .calendar-bookings {
+.timetable-body-cell .timetable-placeholders,
+.timetable-body-cell .timetable-bookings {
    grid-auto-flow: row;
    grid-auto-rows: var(--cell-height);
    grid-auto-columns: 100%;
 }
 
-.calendar-header .calendar-cell {
-   min-height: 27px;
-   height: 27px;
-}
-
-.calendar-cell--row-indicator,
-.calendar-cell--col-indicator {
+.timetable-cell--row-indicator,
+.timetable-cell--col-indicator {
    width: 50px;
+   padding-inline: .5rem;
 }
 
-.calendar-header .calendar-cell,
-.calendar-cell--row-indicator {
-   align-items: center;
+.timetable-header .timetable-cell,
+.timetable-cell--row-indicator {
+   text-align: start;
    background-color: rgb(235 239 241);
 }
 
-.calendar-cell--row-indicator {
+.timetable-cell--row-indicator {
    color: rgb(95, 105, 109);
-   font-size: .7rem;
+   font-size: .85rem;
    text-transform: uppercase;
 }
 
-.calendar-header .calendar-cell:first-child {
+.timetable-header .timetable-cell:first-child {
    border-top-left-radius: 3px;
 }
 
-.calendar-header .calendar-cell:last-child {
+.timetable-header .timetable-cell:last-child {
    border-top-right-radius: 3px;
 }
 
-.calendar-body .calendar-row:last-child .calendar-cell:first-child {
+.timetable-body .timetable-row:last-child .timetable-cell:first-child {
    border-bottom-left-radius: 3px;
 }
 
-.calendar-body .calendar-row:last-child .calendar-cell:last-child {
+.timetable-body .timetable-row:last-child .timetable-cell:last-child {
    border-bottom-right-radius: 3px;
 }
 
@@ -121,12 +122,12 @@ body {
    display: inline-block;
    padding-inline: 3px;
    color: #fff;
-   background-color: rgb(30, 65, 110);
+   background-color: rgb(86 111 143);
    border-radius: 3px;
    transform: translateX(-50%);
 }
 
-.calendar-booking-item {
+.timetable-booking-item {
    position: absolute;
    top: calc(var(--top, 0) * var(--cell-height));
    left: 0;

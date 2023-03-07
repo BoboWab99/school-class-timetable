@@ -1,4 +1,4 @@
-// calendar
+// dynamic school class timetable #frontend
 
 const data = [
    {
@@ -33,7 +33,7 @@ const data = [
       title: 'Ethics',
       venue: 'Longonot',
       start: '09:15',
-      duration: 3,
+      duration: 2,
       day: 3
    },
    {
@@ -81,8 +81,8 @@ const data = [
    {
       title: 'Intro',
       venue: 'Kindaruma',
-      start: '08:15',
-      duration: 4,
+      start: '10:15',
+      duration: 3,
       day: 1
    },
    {
@@ -103,7 +103,7 @@ const data = [
       title: 'Testing',
       venue: 'Kindaruma',
       start: '11:15',
-      duration: 4,
+      duration: 3,
       day: 2
    },
    {
@@ -113,12 +113,85 @@ const data = [
       duration: 3,
       day: 2
    },
+   {
+      title: 'IT Innovation Webiner',
+      venue: 'Boardroom',
+      start: '10:00',
+      duration: 5,
+      day: 5
+   },
 ]
 
-// arrange data by day
-let dayData = {}
+const days = {
+   1: 'Mon',
+   2: 'Tue',
+   3: 'Wed',
+   4: 'Thu',
+   5: 'Fri',
+   6: 'Sat',
+}
 
-const arrangeData = (dayBookings, day = 1) => {
+const startTime = '08:15'  /* classes start time */
+const endTime = '20:30'    /* classes end time */
+const step = 15            /* timetable cell span (minutes) */
+
+
+/**
+ * Prints background timetable cells
+ * @param {HTMLElement} placeholder
+ */
+const timetableLayout = async (placeholder) => {
+
+   placeholder.innerHTML = `
+   <div class="timetable">
+      <div class="timetable-header"></div>
+      <div class="timetable-body"></div>
+   </div>`
+
+   const timetableHeader = placeholder.querySelector('.timetable-header')
+   const timetableBody = placeholder.querySelector('.timetable-body')
+
+   const start = new Date(dateString(startTime))   
+   const end = new Date(dateString(endTime))     
+   const mins = (end - start) / (1000 * 60)
+
+   timetableHeader.innerHTML += `
+      <div class="timetable-row">
+         <div class="timetable-cell timetable-cell--col-indicator"><span>Day</span></div>
+      </div>`
+
+   for (let i = 1; i <= Object.keys(days).length; i++) {
+      timetableBody.innerHTML += `
+      <div class="timetable-row" id="row${i}">
+         <div class="timetable-cell timetable-cell--row-indicator"><span>${days[i]}</span></div>
+      </div>`
+   }
+
+   for (let i = 0; i < mins; i += step) {
+
+      let sTime = start.toTimeString().slice(0, 5)
+      let sTimeLabel = (i % 60 == 0) ? sTime : ''  /* 1-hour difference between time labels */
+
+      timetableHeader.querySelector('.timetable-row')
+         .innerHTML += `<div class="timetable-cell"><span class="time-indicator">${sTimeLabel}</span></div>`
+
+      timetableBody.querySelectorAll('.timetable-row').forEach(row => {
+         let id = row.getAttribute('id').slice(3)   /* row number */
+         id += removeColon(sTime)  /* time without colon : */
+         row.innerHTML += `<div class="timetable-cell timetable-body-cell" id="cell${id}"></div>`
+      })
+
+      start.setMinutes((start.getMinutes() + step))
+   }
+}
+
+/**
+ * Arranges day data and fills the timetable
+ * @param {Array} dayBookings 
+ * @param {Number} day 
+ * @returns 
+ */
+const arrangeFillData = (dayBookings, day = 1) => {
    let sorted = []
    let counter = 0
    sorted[counter] = []
@@ -131,12 +204,8 @@ const arrangeData = (dayBookings, day = 1) => {
       const start = dBookings[startIndex]
       if (JSON.stringify(start) !== JSON.stringify(sorted[counter][sorted[counter].length - 1])) {
          sorted[counter].push(start)
-         // console.log(start)
          bookingItemUI(start, counter)
       }
-
-      /* console.log('prev!');
-      console.log(sorted[counter][sorted[counter].length - 1]); */
 
       if (dBookings.length == 1) {
          return
@@ -144,8 +213,6 @@ const arrangeData = (dayBookings, day = 1) => {
 
       let nextIndex = nextValidTo(startIndex)
       dBookings.splice(startIndex, 1)
-      /* console.log('start');
-      console.log(start); */
 
       if (nextIndex == -1) {
          counter++
@@ -157,27 +224,23 @@ const arrangeData = (dayBookings, day = 1) => {
          const next = dBookings[nextIndex]
          sorted[counter].push(next)
          bookingItemUI(next, counter)
-         // arrayRemove(monBookings, next)
-         /* console.log('next');
-         console.log(next);
-         console.log('---------------------'); */
          arrange(nextIndex)
       }
    }
 
    /**
     * @param {Number} index 
-    * @returns 
+    * @returns index of the booking that can come after current booking in the interval [startTime-endTime]
     */
    const nextValidTo = (index) => {
       const booking = dBookings[index]
 
-      const start1 = new Date(`2000-01-01T${booking.start}:00`)
+      const start1 = new Date(dateString(booking.start))
       let end1 = new Date(start1)
       end1.setHours(booking.duration + end1.getHours())
 
       for (let k = index + 1; k < dBookings.length; k++) {
-         const start2 = new Date(`2000-01-01T${dBookings[k].start}:00`)
+         const start2 = new Date(dateString(dBookings[k].start))
          if (end1 <= start2) {
             return k
          }
@@ -194,79 +257,43 @@ const arrangeData = (dayBookings, day = 1) => {
    return sorted
 }
 
-// wait 1 second before filling table
+/**
+ * Prints the timetable
+ * @param {HTMLElement} placeholder 
+ * @param {Array} data array of class bookings
+ */
+const initTimetable = async (placeholder, data) => {
 
-setTimeout(() => {
+   await timetableLayout(placeholder)
 
-   // arrange data
+   let sortedDayData = {}
+
    for (let i = 1; i <= Object.keys(days).length; i++) {
-      let raw = data.filter(booking => booking.day == i)
-      raw.sort((a, b) => a.start.localeCompare(b.start) || (a.duration - b.duration))
-      dayData[i] = arrangeData(raw, i)
+      let dayData = data.filter(booking => booking.day == i)
+      dayData.sort((a, b) => a.start.localeCompare(b.start) || (a.duration - b.duration))
+      sortedDayData[i] = arrangeFillData(dayData, i)
    }
 
-   console.log(dayData);
-
-}, 1000);
-
-
-// layout
-// --------
-
-const calendar = document.querySelector('.calendar')
-const calendarHeader = calendar.querySelector('.calendar-header')
-const calendarBody = calendar.querySelector('.calendar-body')
-
-let start = new Date('2000-01-01T08:15:00')
-let end = new Date('2000-01-01T20:30:00')
-let mins = (end - start) / (1000 * 60)
-let step = 15 /* minutes */
-
-const days = {
-   1: 'Mon',
-   2: 'Tue',
-   3: 'Wed',
-   4: 'Thu',
-   5: 'Fri',
-   6: 'Sat',
+   console.log(sortedDayData);
 }
 
-calendarHeader.innerHTML += `
-<div class="calendar-row">
-   <div class="calendar-cell calendar-cell--col-indicator">Day</div>
-</div>`
 
-for (let i = 1; i <= Object.keys(days).length; i++) {
-   calendarBody.innerHTML += `
-   <div class="calendar-row" id="row${i}">
-      <div class="calendar-cell calendar-cell--row-indicator">${days[i]}</div>
-   </div>`
-}
+// helpers
+// ------------
 
-for (let i = 0; i < mins; i += step) {
-
-   // 1-hour difference btwn time labels
-
-   let sTime = start.toTimeString().slice(0, 5)
-   let sTimeLabel = (i % 60 == 0) ? sTime : ''
-
-   calendarHeader.querySelector('.calendar-row')
-      .innerHTML += `<div class="calendar-cell"><span class="time-indicator">${sTimeLabel}</span></div>`
-      
-   calendarBody.querySelectorAll('.calendar-row').forEach(row => {
-      let rowId = row.getAttribute('id').slice(3)   /* row number */
-      rowId += removeColon(sTime)  /* time without colon : */
-      row.innerHTML += `<div class="calendar-cell calendar-body-cell" id="cell${rowId}"></div>`
-   })
-
-   start.setMinutes((start.getMinutes() + step))
+/**
+ * @param {String} timeString 
+ * @returns date string
+ */
+function dateString(timeString) {
+   return `2000-01-01T${timeString}:00`
 }
 
 /**
- * @param {String} s time string H:M
+ * @param {String} timeString time string H:M
  */
-function removeColon(s) {
-   return s.slice(0, 2) + s.slice(3)
+function removeColon(timeString) {
+   return timeString.slice(0, 2) + timeString.slice(3)
 }
 
 /**
@@ -278,25 +305,27 @@ function bookingItemUI(course, top = 0) {
    const startCell = document.getElementById(startCellId)
    const colspan = 4 * course.duration
 
-   const c = randomColor()
+   const {color, code} = randomColor()
    let textColor = 'rgb(22 24 26)'
-   if (contrast(c.code) < 4.8) {
+   if (contrast(code) < 4.8) {
       textColor = 'rgb(255 255 255 / .9)'
    }
 
-   startCell.innerHTML += `<div class="calendar-booking-item" style="--top: ${top}; --colspan: ${colspan}">
-      <div class="lecture" role="button" style="color: ${textColor}; background-color: ${c.color}">
+   startCell.innerHTML += `
+   <div class="timetable-booking-item" style="--top: ${top}; --colspan: ${colspan}">
+      <div class="lecture" role="button" style="color: ${textColor}; background-color: ${color}">
          <span class="lecture-title">${course.title}</span>
          <span class="lecture-venue">${course.venue} - ${course.duration} hrs</span>
       </div>
    </div>`
 }
 
+
 // extras
 // ------------
 
 /**
- * @returns color code & rgb values array
+ * @returns random rgb color & rgb values array
  */
 function randomColor() {
    const rand = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
@@ -317,7 +346,7 @@ function randomColor() {
  * @returns 
  */
 function luminance(r, g, b) {
-   var a = [r, g, b].map(function (v) {
+   let a = [r, g, b].map(function (v) {
       v /= 255;
       return v <= 0.03928 ?
          v / 12.92 :
@@ -333,9 +362,14 @@ function luminance(r, g, b) {
  * @returns 
  */
 function contrast(rgb1, rgb2 = [0, 0, 0]) {
-   var lum1 = luminance(rgb1[0], rgb1[1], rgb1[2]);
-   var lum2 = luminance(rgb2[0], rgb2[1], rgb2[2]);
-   var brightest = Math.max(lum1, lum2);
-   var darkest = Math.min(lum1, lum2);
+   let lum1 = luminance(rgb1[0], rgb1[1], rgb1[2]);
+   let lum2 = luminance(rgb2[0], rgb2[1], rgb2[2]);
+   let brightest = Math.max(lum1, lum2);
+   let darkest = Math.min(lum1, lum2);
    return (brightest + 0.05) / (darkest + 0.05);
 }
+
+
+// Testing
+
+initTimetable(document.getElementById('myTimetable'), data)
